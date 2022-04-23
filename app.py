@@ -17,7 +17,8 @@ app = cdk.App()
 NetworkStack(
     app,
     'NetworkStack',
-    env=ENVIRONMENT
+    env=ENVIRONMENT,
+    termination_protection=True,
 )
 
 app.synth()
