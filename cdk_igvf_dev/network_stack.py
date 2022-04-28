@@ -6,10 +6,11 @@ from aws_cdk.aws_ec2 import SubnetConfiguration
 from aws_cdk.aws_ec2 import SubnetType
 from aws_cdk.aws_ec2 import Vpc
 
+from typing import Any
 
 class NetworkStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, **kwargs: Any) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.igvf_dev_vpc = Vpc(
             self,
