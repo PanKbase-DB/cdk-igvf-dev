@@ -59,7 +59,7 @@ class SlackWebhook(Construct):
         )
         rule = Rule(
             self,
-            'PassBatchUpgradeEventsToSlack',
+            'PassEventsToSlack',
             event_pattern=EventPattern(
                 detail={
                     'metadata': {
