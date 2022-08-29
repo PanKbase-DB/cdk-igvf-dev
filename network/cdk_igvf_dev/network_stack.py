@@ -8,6 +8,7 @@ from aws_cdk.aws_ec2 import Vpc
 
 from typing import Any
 
+
 class NetworkStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs: Any) -> None:

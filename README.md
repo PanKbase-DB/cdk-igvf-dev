@@ -7,3 +7,9 @@ Type annotations can be statically checked with `mypy`:
 $ pip install -r requirements-dev.txt
 $ mypy --strict .
 ```
+
+## Updating snapshots
+When making changes review snapshot test failures, and when happy with changes update snapshots:
+```bash
+$ pytest --snapshot-update
+```
