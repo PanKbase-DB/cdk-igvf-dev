@@ -1,0 +1,385 @@
+{
+    "Parameters": {
+        "BootstrapVersion": {
+            "Default": "/cdk-bootstrap/hnb659fds/version",
+            "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+            "Type": "AWS::SSM::Parameter::Value<String>"
+        }
+    },
+    "Resources": {
+        "CleanUpDemoStacks7299AF93": {
+            "Properties": {
+                "ScheduleExpression": "rate(2 hours)",
+                "State": "ENABLED",
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Ref": "StateMachine2E01A3A5"
+                        },
+                        "Id": "Target0",
+                        "RoleArn": {
+                            "Fn::GetAtt": [
+                                "StateMachineEventsRoleDBCDECD1",
+                                "Arn"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::Events::Rule"
+        },
+        "GetStacksToDeleteLambda159BF9A1": {
+            "DependsOn": [
+                "GetStacksToDeleteLambdaServiceRoleDefaultPolicyC251B973",
+                "GetStacksToDeleteLambdaServiceRoleA27D626D"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "6815a3294f97ca5afdc86d4fc2f5ce173b5dfc5379a4e6450ad10e3fcdc15008.zip"
+                },
+                "Handler": "stacks.get_stacks_to_delete",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "GetStacksToDeleteLambdaServiceRoleA27D626D",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.9",
+                "Timeout": 60
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "GetStacksToDeleteLambdaServiceRoleA27D626D": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "GetStacksToDeleteLambdaServiceRoleDefaultPolicyC251B973": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "cloudformation:DescribeStacks",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "GetStacksToDeleteLambdaServiceRoleDefaultPolicyC251B973",
+                "Roles": [
+                    {
+                        "Ref": "GetStacksToDeleteLambdaServiceRoleA27D626D"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "IncrementCounterLambda27A5F523": {
+            "DependsOn": [
+                "IncrementCounterLambdaServiceRole214A07B1"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "d9ad14052775049ff6a00e4dac49150460fcb1541d49c7513bf0c1b9faa7a9a4.zip"
+                },
+                "Handler": "increment.increment_counter",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "IncrementCounterLambdaServiceRole214A07B1",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.9",
+                "Timeout": 60
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "IncrementCounterLambdaServiceRole214A07B1": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "StateMachine2E01A3A5": {
+            "DependsOn": [
+                "StateMachineRoleDefaultPolicyDF1E6607",
+                "StateMachineRoleB840431D"
+            ],
+            "Properties": {
+                "DefinitionString": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "{\"StartAt\":\"GetStacksToDelete\",\"States\":{\"GetStacksToDelete\":{\"Next\":\"InitializeCounter\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultSelector\":{\"stacks_to_delete.$\":\"$\"},\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "GetStacksToDeleteLambda159BF9A1",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Result\":{\"index\":0,\"step\":1,\"count\":3},\"ResultPath\":\"$.iterator\",\"Next\":\"MapStacks\"},\"MapStacks\":{\"Type\":\"Map\",\"Next\":\"Succeed\",\"Parameters\":{\"stack_to_delete.$\":\"$$.Map.Item.Value\",\"iterator.$\":\"$.iterator\"},\"Iterator\":{\"StartAt\":\"IncrementCounter\",\"States\":{\"IncrementCounter\":{\"Next\":\"DeleteStack\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
+                            {
+                                "Fn::GetAtt": [
+                                    "IncrementCounterLambda27A5F523",
+                                    "Arn"
+                                ]
+                            },
+                            "\"},\"ShouldTryAgain\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.iterator.continue\",\"BooleanEquals\":true,\"Next\":\"IncrementCounter\"}],\"Default\":\"UnableToDelete\"},\"DoesStackExist\":{\"Next\":\"ShouldTryAgain\",\"Catch\":[{\"ErrorEquals\":[\"CloudFormation.CloudFormationException\"],\"ResultPath\":\"$.errors\",\"Next\":\"DeleteSuccessful\"}],\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":states:::aws-sdk:cloudformation:describeStacks\",\"Parameters\":{\"StackName.$\":\"$.stack_to_delete\"}},\"WaitTenMinutes\":{\"Type\":\"Wait\",\"Seconds\":600,\"Next\":\"DoesStackExist\"},\"DeleteStack\":{\"Next\":\"WaitTenMinutes\",\"Catch\":[{\"ErrorEquals\":[\"CloudFormation.CloudFormationException\"],\"ResultPath\":\"$.errors\",\"Next\":\"UnableToDelete\"}],\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":states:::aws-sdk:cloudformation:deleteStack\",\"Parameters\":{\"StackName.$\":\"$.stack_to_delete\"}},\"UnableToDelete\":{\"Type\":\"Pass\",\"Next\":\"MakeFailureMessage\"},\"MakeFailureMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"StackDeleteFailed\",\"source\":\"cdk-igvf-dev.cleaner.DemoCleaner.\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':x: *StackDeleteFailed* | {}', $.stack_to_delete)\"}}}},\"Next\":\"SendSlackNotification\"},\"SendSlackNotification\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":null,\"Resource\":\"arn:",
+                            {
+                                "Ref": "AWS::Partition"
+                            },
+                            ":states:::events:putEvents\",\"Parameters\":{\"Entries\":[{\"Detail.$\":\"$.detail\",\"DetailType.$\":\"$.detailType\",\"Source.$\":\"$.source\"}]}},\"MakeSuccessMessage\":{\"Type\":\"Pass\",\"Parameters\":{\"detailType\":\"StackDeleteCompleted\",\"source\":\"cdk-igvf-dev.cleaner.DemoCleaner\",\"detail\":{\"metadata\":{\"includes_slack_notification\":true},\"data\":{\"slack\":{\"text.$\":\"States.Format(':white_check_mark: *StackDeleteSucceeded* | {}', $.stack_to_delete)\"}}}},\"Next\":\"SendSlackNotification\"},\"DeleteSuccessful\":{\"Type\":\"Pass\",\"Next\":\"MakeSuccessMessage\"}}},\"ItemsPath\":\"$.stacks_to_delete\",\"MaxConcurrency\":50},\"Succeed\":{\"Type\":\"Succeed\"}}}"
+                        ]
+                    ]
+                },
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "StateMachineRoleB840431D",
+                        "Arn"
+                    ]
+                }
+            },
+            "Type": "AWS::StepFunctions::StateMachine"
+        },
+        "StateMachineEventsRoleDBCDECD1": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "events.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "StateMachineEventsRoleDefaultPolicyFB602CA9": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "states:StartExecution",
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Ref": "StateMachine2E01A3A5"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "StateMachineEventsRoleDefaultPolicyFB602CA9",
+                "Roles": [
+                    {
+                        "Ref": "StateMachineEventsRoleDBCDECD1"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "StateMachineRoleB840431D": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "states.testing.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "StateMachineRoleDefaultPolicyDF1E6607": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "GetStacksToDeleteLambda159BF9A1",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "GetStacksToDeleteLambda159BF9A1",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "lambda:InvokeFunction",
+                            "Effect": "Allow",
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "IncrementCounterLambda27A5F523",
+                                        "Arn"
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::GetAtt": [
+                                                    "IncrementCounterLambda27A5F523",
+                                                    "Arn"
+                                                ]
+                                            },
+                                            ":*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Action": "cloudformation:describeStacks",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
+                            "Action": "cloudformation:deleteStack",
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
+                            "Action": "events:PutEvents",
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:",
+                                        {
+                                            "Ref": "AWS::Partition"
+                                        },
+                                        ":events:testing:testing:event-bus/default"
+                                    ]
+                                ]
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "StateMachineRoleDefaultPolicyDF1E6607",
+                "Roles": [
+                    {
+                        "Ref": "StateMachineRoleB840431D"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        }
+    },
+    "Rules": {
+        "CheckBootstrapVersion": {
+            "Assertions": [
+                {
+                    "Assert": {
+                        "Fn::Not": [
+                            {
+                                "Fn::Contains": [
+                                    [
+                                        "1",
+                                        "2",
+                                        "3",
+                                        "4",
+                                        "5"
+                                    ],
+                                    {
+                                        "Ref": "BootstrapVersion"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+                }
+            ]
+        }
+    }
+}
