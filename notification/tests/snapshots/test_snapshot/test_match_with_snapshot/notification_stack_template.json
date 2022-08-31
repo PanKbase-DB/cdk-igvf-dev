@@ -11,6 +11,9 @@
         }
     },
     "Resources": {
+        "AlarmNotificationTopic58BFACC9": {
+            "Type": "AWS::SNS::Topic"
+        },
         "AwsIgvfDevSlackWebhookConnection99B8BD92": {
             "Properties": {
                 "AuthParameters": {
@@ -124,7 +127,12 @@
                     ]
                 },
                 "SlackChannelId": "C03TCFF0MTM",
-                "SlackWorkspaceId": "T1KMV4JJZ"
+                "SlackWorkspaceId": "T1KMV4JJZ",
+                "SnsTopicArns": [
+                    {
+                        "Ref": "AlarmNotificationTopic58BFACC9"
+                    }
+                ]
             },
             "Type": "AWS::Chatbot::SlackChannelConfiguration"
         },
