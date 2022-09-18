@@ -770,11 +770,39 @@ def test_lambdas_cloudformation_stacks_filter_stacks_living_longer_than_time_to_
     patched_current_time = mocker.patch(
         'cleaner.lambdas.cloudformation.stacks.get_current_utc_time')
     patched_current_time.return_value = datetime.datetime(
-        2022, 9, 4, 21, 44, 28, 625000, tzinfo=tzutc())
+        2022, 9, 4, 21, 44, 28, 625000, tzinfo=tzutc()
+    )
     filtered_stacks = filter_stacks_living_longer_than_time_to_live_hours(
         filter_stacks_with_time_to_live_hours_tag(
             raw_stacks
         )
+    )
+    assert len(filtered_stacks) == 5
+
+
+def test_lambdas_cloudformation_stacks_stack_has_turn_off_on_friday_night_yes_tag(raw_stacks):
+    from cleaner.lambdas.cloudformation.stacks import stack_has_turn_off_on_friday_night_yes_tag
+    from copy import deepcopy
+    stack = deepcopy(raw_stacks[0])
+    assert stack_has_turn_off_on_friday_night_yes_tag(
+        stack
+    )
+    stack['Tags'][4]['Value'] = 'no'
+    assert not stack_has_turn_off_on_friday_night_yes_tag(
+        stack
+    )
+    stack['Tags'] = []
+    assert not stack_has_turn_off_on_friday_night_yes_tag(
+        stack
+    )
+
+
+def test_lambdas_cloudformation_stacks_filter_stacks_by_turn_off_on_friday_night_is_yes(raw_stacks, mocker):
+    import datetime
+    from zoneinfo import ZoneInfo
+    from cleaner.lambdas.cloudformation.stacks import filter_stacks_by_turn_off_on_friday_night_is_yes
+    filtered_stacks = filter_stacks_by_turn_off_on_friday_night_is_yes(
+        raw_stacks
     )
     assert len(filtered_stacks) == 5
 
@@ -807,30 +835,53 @@ def test_lambdas_cloudformation_stacks_get_stacks_to_delete_because_of_time_to_l
     from dateutil.tz import tzutc
     from cleaner.lambdas.cloudformation.stacks import get_stacks_to_delete_because_of_time_to_live_hours_tag
     patched_current_time = mocker.patch(
-        'cleaner.lambdas.cloudformation.stacks.get_current_utc_time')
+        'cleaner.lambdas.cloudformation.stacks.get_current_utc_time'
+    )
     patched_current_time.return_value = datetime.datetime(
-        2022, 9, 4, 21, 44, 28, 625000, tzinfo=tzutc())
+        2022, 9, 4, 21, 44, 28, 625000, tzinfo=tzutc()
+    )
     patched_stacks = mocker.patch(
-        'cleaner.lambdas.cloudformation.stacks.get_all_stacks')
+        'cleaner.lambdas.cloudformation.stacks.get_all_stacks'
+    )
     patched_stacks.return_value = raw_stacks
     stacks_to_delete = get_stacks_to_delete_because_of_time_to_live_hours_tag()
     assert len(stacks_to_delete) == 5
 
 
 @mock_cloudformation
-def test_lambdas_cloudformation_stacks_get_stacks_to_delete_because_turn_off_on_friday_night_tag(aws_credentials, raw_stacks, mocker):
+def test_lambdas_cloudformation_stacks_get_stacks_to_delete_because_it_is_friday_night(aws_credentials, raw_stacks, mocker):
     import datetime
     from zoneinfo import ZoneInfo
     from cleaner.lambdas.cloudformation.stacks import get_stacks_to_delete_because_it_is_friday_night
-    patched_current_time = mocker.patch(
-        'cleaner.lambdas.cloudformation.stacks.get_current_pacific_time')
-    patched_current_time.return_value = datetime.datetime(
-        2022, 9, 4, 21, 44, 28, 625000, tzinfo=ZoneInfo('US/Pacific'))
     patched_stacks = mocker.patch(
         'cleaner.lambdas.cloudformation.stacks.get_all_stacks')
     patched_stacks.return_value = raw_stacks
     stacks_to_delete = get_stacks_to_delete_because_it_is_friday_night()
+    assert len(stacks_to_delete) == 5
+
+
+@mock_cloudformation
+def test_lambdas_cloudformation_stacks_maybe_get_stacks_to_delete_because_it_is_friday_night(aws_credentials, raw_stacks, mocker):
+    import datetime
+    from zoneinfo import ZoneInfo
+    from cleaner.lambdas.cloudformation.stacks import maybe_get_stacks_to_delete_because_it_is_friday_night
+    patched_current_time = mocker.patch(
+        'cleaner.lambdas.cloudformation.stacks.get_current_pacific_time'
+    )
+    patched_current_time.return_value = datetime.datetime(
+        2022, 9, 4, 21, 44, 28, 625000, tzinfo=ZoneInfo('US/Pacific')
+    )
+    patched_stacks = mocker.patch(
+        'cleaner.lambdas.cloudformation.stacks.get_all_stacks'
+    )
+    patched_stacks.return_value = raw_stacks
+    stacks_to_delete = maybe_get_stacks_to_delete_because_it_is_friday_night()
     assert len(stacks_to_delete) == 0
+    patched_current_time.return_value = datetime.datetime(
+        2022, 9, 3, 6, 44, 28, 625000, tzinfo=ZoneInfo('US/Pacific')
+    )
+    stacks_to_delete = maybe_get_stacks_to_delete_because_it_is_friday_night()
+    assert len(stacks_to_delete) == 5
 
 
 def test_lambdas_cloudformation_stacks_get_stack_names_from_stacks(raw_stacks):

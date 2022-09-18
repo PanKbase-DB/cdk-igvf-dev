@@ -177,11 +177,18 @@ def filter_stacks_living_longer_than_time_to_live_hours(stacks):
     ]
 
 
+def stack_has_turn_off_on_friday_night_yes_tag(stack):
+    tag = get_turn_off_on_friday_night_tag_or_none(stack)
+    if tag is not None:
+        return tag['Value'] == 'yes'
+    return False
+
+
 def filter_stacks_by_turn_off_on_friday_night_is_yes(stacks):
     return [
         stack
         for stack in stacks
-        if get_turn_off_on_friday_night_tag_or_none(stack) == 'yes'
+        if stack_has_turn_off_on_friday_night_yes_tag(stack)
     ]
 
 
