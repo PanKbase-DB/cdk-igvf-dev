@@ -163,7 +163,7 @@ class DemoCleaner(Stack):
                 {
                     'index': 0,
                     'step': 1,
-                    'count': 3,
+                    'count': 4,
                 }
             ),
             result_path='$.iterator',
