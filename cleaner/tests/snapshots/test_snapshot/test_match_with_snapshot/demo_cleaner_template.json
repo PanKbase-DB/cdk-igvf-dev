@@ -171,7 +171,7 @@
                                     "Arn"
                                 ]
                             },
-                            "\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Result\":{\"index\":0,\"step\":1,\"count\":4},\"ResultPath\":\"$.iterator\",\"Next\":\"MapStacks\"},\"MapStacks\":{\"Type\":\"Map\",\"Next\":\"Succeed\",\"Parameters\":{\"stack_to_delete.$\":\"$$.Map.Item.Value\",\"iterator.$\":\"$.iterator\"},\"Iterator\":{\"StartAt\":\"IncrementCounter\",\"States\":{\"IncrementCounter\":{\"Next\":\"DeleteStack\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
+                            "\"},\"InitializeCounter\":{\"Type\":\"Pass\",\"Result\":{\"index\":0,\"step\":1,\"count\":6},\"ResultPath\":\"$.iterator\",\"Next\":\"MapStacks\"},\"MapStacks\":{\"Type\":\"Map\",\"Next\":\"Succeed\",\"Parameters\":{\"stack_to_delete.$\":\"$$.Map.Item.Value\",\"iterator.$\":\"$.iterator\"},\"Iterator\":{\"StartAt\":\"IncrementCounter\",\"States\":{\"IncrementCounter\":{\"Next\":\"DeleteStack\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"ResultPath\":\"$.iterator\",\"Resource\":\"",
                             {
                                 "Fn::GetAtt": [
                                     "IncrementCounterLambda27A5F523",
