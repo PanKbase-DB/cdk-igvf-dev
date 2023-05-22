@@ -20,6 +20,29 @@ BLOBS_BUCKET_NAME = 'igvf-blobs-dev'
 FILES_BUCKET_NAME = 'igvf-files-dev'
 
 
+BROWSER_UPLOAD_CORS = CorsRule(
+    allowed_methods=[
+        HttpMethods.GET,
+        HttpMethods.HEAD,
+        HttpMethods.POST,
+        HttpMethods.PUT,
+    ],
+    allowed_origins=[
+        'https://*-script.googleusercontent.com'
+    ],
+    allowed_headers=[
+        '*',
+    ],
+    exposed_headers=[
+        'Content-Length',
+        'Content-Range',
+        'Content-Type',
+        'ETag',
+    ],
+    max_age=3000,
+)
+
+
 CORS = CorsRule(
     allowed_methods=[
         HttpMethods.GET,
@@ -100,6 +123,7 @@ class BucketStorage(Stack):
             'FilesBucket',
             bucket_name=f'{FILES_BUCKET_NAME}',
             cors=[
+                BROWSER_UPLOAD_CORS,
                 CORS
             ],
             removal_policy=RemovalPolicy.RETAIN,
