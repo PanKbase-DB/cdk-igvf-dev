@@ -1,5 +1,7 @@
 import boto3
 import logging
+import json
+import os
 
 from datetime import datetime
 from datetime import timezone
@@ -28,6 +30,7 @@ OKAY_STATUSES = [
 
 TIME_TO_LIVE_HOURS = 'time-to-live-hours'
 TURN_OFF_ON_FRIDAY_NIGHT = 'turn-off-on-friday-night'
+BRANCH = 'branch'
 
 SECONDS_IN_AN_HOUR = 3600
 SATURDAY_WEEKDAY_NUMBER = 5
@@ -41,12 +44,38 @@ def get_describe_stacks_paginator(client):
     return client.get_paginator('describe_stacks')
 
 
+def get_sqs_client():
+    return boto3.client('sqs')
+
+
+def get_delete_branch_queue_url():
+    return os.environ['DELETE_BRANCH_QUEUE_URL']
+
+
 def get_all_stacks(paginator):
     return [
         stack
         for result in paginator.paginate()
         for stack in result['Stacks']
     ]
+
+
+def get_messages_from_delete_branch_queue():
+    messages = []
+    logger.info('Getting messages from delete branch queue')
+    client = get_sqs_client()
+    # Need multiple calls when # of messages < 1000.
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs/client/receive_message.html#SQS.Client.receive_message
+    for i in range(4):
+        messages.extend(
+            client.receive_message(
+                QueueUrl=get_delete_branch_queue_url(),
+                MaxNumberOfMessages=10,
+                WaitTimeSeconds=15,
+            ).get('Messages', [])
+        )
+    logger.info(f'Got {len(messages)} messages')
+    return messages
 
 
 def filter_stacks_by_statuses(stacks):
@@ -94,6 +123,17 @@ def filter_stacks_with_turn_off_on_friday_night_tag(stacks):
         for stack in stacks
         if stack_has_turn_off_on_friday_night_tag(stack)
     ]
+
+
+def get_branch_tag_or_none(stack):
+    return get_tag_by_key(stack, BRANCH)
+
+
+def stack_has_maching_branch_tag(stack, branch):
+    tag = get_branch_tag_or_none(stack)
+    if tag is not None:
+        return tag['Value'] == branch
+    return False
 
 
 def get_stack_name(stack):
@@ -192,6 +232,30 @@ def filter_stacks_by_turn_off_on_friday_night_is_yes(stacks):
     ]
 
 
+def handle_delete_queue_messages_and_filter_stacks_by_branch(messages, stacks):
+    sqs_client = get_sqs_client()
+    queue_url = get_delete_branch_queue_url()
+    stacks_to_delete = []
+    for message in messages:
+        branch = json.loads(message['Body'])['branch']
+        logger.info(f'Got delete queue message for branch {branch}')
+        if branch not in ['dev', 'main']:
+            matching_stacks = [
+                stack
+                for stack in stacks
+                if stack_has_maching_branch_tag(stack, branch)
+            ]
+            if not matching_stacks:
+                logger.info(f'delete message from queue for branch {branch}')
+                delete_response = sqs_client.delete_message(
+                    QueueUrl=queue_url,
+                    ReceiptHandle=message['ReceiptHandle']
+                )
+            else:
+                stacks_to_delete.extend(matching_stacks)
+    return stacks_to_delete
+
+
 def get_stacks_to_delete_because_of_time_to_live_hours_tag():
     client = get_cloudformation_client()
     paginator = get_describe_stacks_paginator(client)
@@ -220,6 +284,19 @@ def maybe_get_stacks_to_delete_because_it_is_friday_night():
         return []
 
 
+def get_stacks_to_delete_because_a_github_branch_was_deleted():
+    client = get_cloudformation_client()
+    paginator = get_describe_stacks_paginator(client)
+    stacks = get_all_stacks(paginator)
+    stacks = filter_stacks_by_statuses(stacks)
+    messages = get_messages_from_delete_branch_queue()
+    stacks = handle_delete_queue_messages_and_filter_stacks_by_branch(
+        messages,
+        stacks
+    )
+    return stacks
+
+
 def get_stack_names_from_stacks(stacks):
     return [
         get_stack_name(stack)
@@ -231,6 +308,7 @@ def get_stacks_to_delete(event, context):
     list_of_lists_of_stacks_to_delete = [
         get_stacks_to_delete_because_of_time_to_live_hours_tag(),
         maybe_get_stacks_to_delete_because_it_is_friday_night(),
+        get_stacks_to_delete_because_a_github_branch_was_deleted(),
         # Extend with other routines here.
     ]
     stacks_to_delete = [

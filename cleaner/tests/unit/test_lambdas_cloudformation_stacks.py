@@ -1,6 +1,7 @@
 import pytest
 
 from moto import mock_cloudformation
+from moto import mock_sqs
 
 from dateutil.parser import isoparse
 
@@ -906,9 +907,14 @@ def test_lambdas_cloudformation_stacks_get_stack_names_from_stacks(raw_stacks):
 
 
 @mock_cloudformation
+@mock_sqs
 def test_lambdas_cloudformation_stacks_get_stacks_to_delete(aws_credentials, raw_stacks, mocker):
+    import os
     import datetime
+    import boto3
     from dateutil.tz import tzutc
+    mocker.patch.dict(os.environ, {'DELETE_BRANCH_QUEUE_URL': 'abc'})
+    boto3.client('sqs').create_queue(QueueName='abc')
     from cleaner.lambdas.cloudformation.stacks import get_stacks_to_delete
     patched_current_time = mocker.patch(
         'cleaner.lambdas.cloudformation.stacks.get_current_utc_time')

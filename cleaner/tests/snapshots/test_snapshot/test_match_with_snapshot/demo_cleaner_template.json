@@ -1,4 +1,14 @@
 {
+    "Outputs": {
+        "DeleteBranchWebhookURL": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "DeleteBranchWebhookFunctionUrl9ADEB4EE",
+                    "FunctionUrl"
+                ]
+            }
+        }
+    },
     "Parameters": {
         "BootstrapVersion": {
             "Default": "/cdk-bootstrap/hnb659fds/version",
@@ -9,7 +19,7 @@
     "Resources": {
         "CleanUpDemoStacks7299AF93": {
             "Properties": {
-                "ScheduleExpression": "rate(2 hours)",
+                "ScheduleExpression": "rate(1 hour)",
                 "State": "ENABLED",
                 "Targets": [
                     {
@@ -28,6 +38,157 @@
             },
             "Type": "AWS::Events::Rule"
         },
+        "DeleteBranchDeadLetterQueueD26DAB25": {
+            "DeletionPolicy": "Delete",
+            "Properties": {
+                "MessageRetentionPeriod": 1209600
+            },
+            "Type": "AWS::SQS::Queue",
+            "UpdateReplacePolicy": "Delete"
+        },
+        "DeleteBranchQueue51E8FA93": {
+            "DeletionPolicy": "Delete",
+            "Properties": {
+                "RedrivePolicy": {
+                    "deadLetterTargetArn": {
+                        "Fn::GetAtt": [
+                            "DeleteBranchDeadLetterQueueD26DAB25",
+                            "Arn"
+                        ]
+                    },
+                    "maxReceiveCount": 3
+                },
+                "VisibilityTimeout": 120
+            },
+            "Type": "AWS::SQS::Queue",
+            "UpdateReplacePolicy": "Delete"
+        },
+        "DeleteBranchWebhook450DDFCD": {
+            "DependsOn": [
+                "DeleteBranchWebhookServiceRoleDefaultPolicy3379D49C",
+                "DeleteBranchWebhookServiceRoleD3B2D8DC"
+            ],
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
+                    "S3Key": "cd3424df47fab42a58c01d6f4b2ad8dfc8e0f97d024c614ee30f743563217cb3.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "QUEUE_URL": {
+                            "Ref": "DeleteBranchQueue51E8FA93"
+                        },
+                        "SECRET_ARN": "arn:aws:secretsmanager:us-west-2:109189702753:secret:github-webhook-secret-hz6JXf"
+                    }
+                },
+                "Handler": "index.handler",
+                "MemorySize": 512,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "DeleteBranchWebhookServiceRoleD3B2D8DC",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.9",
+                "Timeout": 60
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "DeleteBranchWebhookFunctionUrl9ADEB4EE": {
+            "Properties": {
+                "AuthType": "NONE",
+                "TargetFunctionArn": {
+                    "Fn::GetAtt": [
+                        "DeleteBranchWebhook450DDFCD",
+                        "Arn"
+                    ]
+                }
+            },
+            "Type": "AWS::Lambda::Url"
+        },
+        "DeleteBranchWebhookServiceRoleD3B2D8DC": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:",
+                                {
+                                    "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            ]
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "DeleteBranchWebhookServiceRoleDefaultPolicy3379D49C": {
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "secretsmanager:GetSecretValue",
+                                "secretsmanager:DescribeSecret"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "arn:aws:secretsmanager:us-west-2:109189702753:secret:github-webhook-secret-hz6JXf"
+                        },
+                        {
+                            "Action": [
+                                "sqs:SendMessage",
+                                "sqs:GetQueueAttributes",
+                                "sqs:GetQueueUrl"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": [
+                                    "DeleteBranchQueue51E8FA93",
+                                    "Arn"
+                                ]
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "DeleteBranchWebhookServiceRoleDefaultPolicy3379D49C",
+                "Roles": [
+                    {
+                        "Ref": "DeleteBranchWebhookServiceRoleD3B2D8DC"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Policy"
+        },
+        "DeleteBranchWebhookinvokefunctionurl391B2D4B": {
+            "Properties": {
+                "Action": "lambda:InvokeFunctionUrl",
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "DeleteBranchWebhook450DDFCD",
+                        "Arn"
+                    ]
+                },
+                "FunctionUrlAuthType": "NONE",
+                "Principal": "*"
+            },
+            "Type": "AWS::Lambda::Permission"
+        },
         "GetStacksToDeleteLambda159BF9A1": {
             "DependsOn": [
                 "GetStacksToDeleteLambdaServiceRoleDefaultPolicyC251B973",
@@ -36,7 +197,14 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": "cdk-hnb659fds-assets-testing-testing",
-                    "S3Key": "2a83689ff0bbbf1d5a0039686a74f2fbe3e06edf28f5c85b476873005172480f.zip"
+                    "S3Key": "1a9436b4b3910528f4e13ed2dd52eecbdab487c19f950f865e339e6d6fdee524.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "DELETE_BRANCH_QUEUE_URL": {
+                            "Ref": "DeleteBranchQueue51E8FA93"
+                        }
+                    }
                 },
                 "Handler": "stacks.get_stacks_to_delete",
                 "Role": {
@@ -46,7 +214,7 @@
                     ]
                 },
                 "Runtime": "python3.9",
-                "Timeout": 60
+                "Timeout": 120
             },
             "Type": "AWS::Lambda::Function"
         },
@@ -85,6 +253,22 @@
             "Properties": {
                 "PolicyDocument": {
                     "Statement": [
+                        {
+                            "Action": [
+                                "sqs:ReceiveMessage",
+                                "sqs:ChangeMessageVisibility",
+                                "sqs:GetQueueUrl",
+                                "sqs:DeleteMessage",
+                                "sqs:GetQueueAttributes"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": [
+                                    "DeleteBranchQueue51E8FA93",
+                                    "Arn"
+                                ]
+                            }
+                        },
                         {
                             "Action": "cloudformation:DescribeStacks",
                             "Effect": "Allow",

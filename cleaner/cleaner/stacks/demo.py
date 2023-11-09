@@ -1,5 +1,6 @@
 from aws_cdk import Stack
 from aws_cdk import Duration
+from aws_cdk import CfnOutput
 
 from constructs import Construct
 
@@ -7,6 +8,7 @@ from aws_cdk.aws_iam import PolicyStatement
 
 from aws_cdk.aws_lambda_python_alpha import PythonFunction
 from aws_cdk.aws_lambda import Runtime
+from aws_cdk.aws_lambda import FunctionUrlAuthType
 
 from aws_cdk.aws_events import Rule
 from aws_cdk.aws_events import Schedule
@@ -30,10 +32,62 @@ from aws_cdk.aws_stepfunctions_tasks import EventBridgePutEvents
 from aws_cdk.aws_stepfunctions_tasks import EventBridgePutEventsEntry
 from aws_cdk.aws_stepfunctions_tasks import LambdaInvoke
 
+from aws_cdk.aws_secretsmanager import Secret
+
+from aws_cdk.aws_sqs import DeadLetterQueue
+from aws_cdk.aws_sqs import Queue
+
 
 class DemoCleaner(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        delete_branch_webhook_secret = Secret.from_secret_complete_arn(
+            self,
+            'DeleteBranchWebhookSecret',
+            secret_complete_arn='arn:aws:secretsmanager:us-west-2:109189702753:secret:github-webhook-secret-hz6JXf',
+        )
+
+        delete_branch_dead_letter_queue = Queue(
+            self,
+            'DeleteBranchDeadLetterQueue',
+            retention_period=Duration.days(14),
+        )
+
+        delete_branch_queue = Queue(
+            self,
+            'DeleteBranchQueue',
+            visibility_timeout=Duration.seconds(120),
+            dead_letter_queue=DeadLetterQueue(
+                queue=delete_branch_dead_letter_queue,
+                max_receive_count=3,
+            )
+        )
+
+        delete_branch_webhook = PythonFunction(
+            self,
+            'DeleteBranchWebhook',
+            runtime=Runtime.PYTHON_3_9,
+            entry='cleaner/lambdas/webhook',
+            memory_size=512,
+            timeout=Duration.seconds(60),
+            environment={
+                'QUEUE_URL': delete_branch_queue.queue_url,
+                'SECRET_ARN': delete_branch_webhook_secret.secret_arn,
+            }
+        )
+
+        delete_branch_webhook_secret.grant_read(
+            delete_branch_webhook
+        )
+
+        delete_branch_queue.grant_send_messages(
+            delete_branch_webhook
+        )
+
+        delete_branch_function_url = delete_branch_webhook.add_function_url(
+            auth_type=FunctionUrlAuthType.NONE,
+        )
 
         succeed = Succeed(
             self,
@@ -104,7 +158,14 @@ class DemoCleaner(Stack):
             runtime=Runtime.PYTHON_3_9,
             index='stacks.py',
             handler='get_stacks_to_delete',
-            timeout=Duration.seconds(60),
+            timeout=Duration.seconds(120),
+            environment={
+                'DELETE_BRANCH_QUEUE_URL': delete_branch_queue.queue_url,
+            }
+        )
+
+        delete_branch_queue.grant_consume_messages(
+            get_stacks_to_delete_lambda
         )
 
         get_stacks_to_delete_lambda.role.add_to_policy(
@@ -283,9 +344,15 @@ class DemoCleaner(Stack):
             self,
             'CleanUpDemoStacks',
             schedule=Schedule.rate(
-                Duration.hours(2)
+                Duration.hours(1)
             ),
             targets=[
                 state_machine_target
             ]
+        )
+
+        CfnOutput(
+            self,
+            'DeleteBranchWebhookURL',
+            value=delete_branch_function_url.url
         )
