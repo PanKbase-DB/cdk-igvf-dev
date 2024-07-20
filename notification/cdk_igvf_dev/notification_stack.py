@@ -17,7 +17,7 @@ class NotificationStack(cdk.Stack):
         super().__init__(scope, construct_id, **kwargs)
         self.encode_dcc_chatbot: SlackChannelConfiguration = SlackChannelConfiguration(
             self,
-            'encode-dcc-aws-chatbot',
+            'aws-chatbot',
             slack_channel_configuration_name='aws-chatbot',
             slack_workspace_id='T1KMV4JJZ',
             slack_channel_id='C03TCFF0MTM',
