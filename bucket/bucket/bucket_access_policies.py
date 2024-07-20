@@ -17,10 +17,10 @@ from typing import Any
 
 
 READ_ACCESSIBLE_PRODUCTION_RESOURCES = [
-    'arn:aws:s3:::igvf-blobs',
-    'arn:aws:s3:::igvf-blobs/*',
-    'arn:aws:s3:::igvf-files',
-    'arn:aws:s3:::igvf-files/*',
+    'arn:aws:s3:::pankbase-blobs',
+    'arn:aws:s3:::pankbase-blobs/*',
+    'arn:aws:s3:::pankbase-files',
+    'arn:aws:s3:::pankbase-files/*',
 ]
 
 
@@ -86,7 +86,7 @@ class BucketAccessPolicies(Stack):
         self.download_igvf_files_policy = ManagedPolicy(
             self,
             'DownloadIgvfFilesPolicy',
-            managed_policy_name='download-igvf-files',
+            managed_policy_name='download-pankbase-files',
             statements=[
                 self.download_igvf_files_policy_statement,
             ],
@@ -95,7 +95,7 @@ class BucketAccessPolicies(Stack):
         self.upload_igvf_files_policy = ManagedPolicy(
             self,
             'UploadIgvfFilesPolicy',
-            managed_policy_name='upload-igvf-files',
+            managed_policy_name='upload-pankbase-files',
             statements=[
                 self.upload_igvf_files_policy_statement,
                 self.federated_token_policy_statement,
@@ -105,7 +105,7 @@ class BucketAccessPolicies(Stack):
         self.upload_igvf_files_user = User(
             self,
             'UploadIgvfFilesUser',
-            user_name='upload-igvf-files',
+            user_name='upload-pankbase-files',
             managed_policies=[
                 self.upload_igvf_files_policy,
             ]
@@ -120,7 +120,7 @@ class BucketAccessPolicies(Stack):
         self.upload_igvf_files_user_access_key_secret = Secret(
             self,
             'UploadIgvfFilesUserAccessKeySecret',
-            secret_name='upload-igvf-files-user-access-key-secret',
+            secret_name='upload-pankbase-files-user-access-key-secret',
             secret_object_value={
                 'ACCESS_KEY': SecretValue.unsafe_plain_text(
                     self.upload_igvf_files_user_access_key.access_key_id,

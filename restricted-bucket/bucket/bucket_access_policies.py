@@ -76,7 +76,7 @@ class RestrictedBucketAccessPolicies(Stack):
         self.download_igvf_restricted_files_policy = ManagedPolicy(
             self,
             'DownloadIgvfRestrictedFilesPolicy',
-            managed_policy_name='download-igvf-restricted-files',
+            managed_policy_name='download-pankbase-restricted-files',
             statements=[
                 self.download_igvf_restricted_files_policy_statement,
             ],
@@ -85,7 +85,7 @@ class RestrictedBucketAccessPolicies(Stack):
         self.upload_igvf_restricted_files_policy = ManagedPolicy(
             self,
             'UploadIgvfRestrictedFilesPolicy',
-            managed_policy_name='upload-igvf-restricted-files',
+            managed_policy_name='upload-pankbase-restricted-files',
             statements=[
                 self.upload_igvf_restricted_files_policy_statement,
                 self.restricted_federated_token_policy_statement,
@@ -95,7 +95,7 @@ class RestrictedBucketAccessPolicies(Stack):
         self.upload_igvf_restricted_files_user = User(
             self,
             'UploadIgvfRestrictedFilesUser',
-            user_name='upload-igvf-restricted-files',
+            user_name='upload-pankbase-restricted-files',
             managed_policies=[
                 self.upload_igvf_restricted_files_policy,
             ]
@@ -110,7 +110,7 @@ class RestrictedBucketAccessPolicies(Stack):
         self.upload_igvf_restricted_files_user_access_key_secret = Secret(
             self,
             'UploadIgvfRestrictedFilesUserAccessKeySecret',
-            secret_name='upload-igvf-restricted_files-user-access-key-secret',
+            secret_name='upload-pankbase-restricted_files-user-access-key-secret',
             secret_object_value={
                 'ACCESS_KEY': SecretValue.unsafe_plain_text(
                     self.upload_igvf_restricted_files_user_access_key.access_key_id,

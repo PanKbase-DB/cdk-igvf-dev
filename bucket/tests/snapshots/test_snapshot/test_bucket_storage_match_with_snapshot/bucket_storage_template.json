@@ -10,7 +10,7 @@
         "BlobsBucket4E25380C": {
             "DeletionPolicy": "Retain",
             "Properties": {
-                "BucketName": "igvf-blobs-dev",
+                "BucketName": "pankbase-blobs-dev",
                 "CorsConfiguration": {
                     "CorsRules": [
                         {
@@ -53,7 +53,7 @@
             "DeletionPolicy": "Retain",
             "Properties": {
                 "AccessControl": "LogDeliveryWrite",
-                "BucketName": "igvf-blobs-dev-logs"
+                "BucketName": "pankbase-blobs-dev-logs"
             },
             "Type": "AWS::S3::Bucket",
             "UpdateReplacePolicy": "Retain"
@@ -61,7 +61,7 @@
         "FilesBucket16450113": {
             "DeletionPolicy": "Retain",
             "Properties": {
-                "BucketName": "igvf-files-dev",
+                "BucketName": "pankbase-files-dev",
                 "CorsConfiguration": {
                     "CorsRules": [
                         {
@@ -125,7 +125,7 @@
             "DeletionPolicy": "Retain",
             "Properties": {
                 "AccessControl": "LogDeliveryWrite",
-                "BucketName": "igvf-files-dev-logs"
+                "BucketName": "pankbase-files-dev-logs"
             },
             "Type": "AWS::S3::Bucket",
             "UpdateReplacePolicy": "Retain"

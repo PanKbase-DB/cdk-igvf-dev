@@ -16,8 +16,8 @@ from typing import Any
 from typing import List
 
 
-BLOBS_BUCKET_NAME = 'igvf-blobs-dev'
-FILES_BUCKET_NAME = 'igvf-files-dev'
+BLOBS_BUCKET_NAME = 'pankbase-blobs-dev'
+FILES_BUCKET_NAME = 'pankbase-files-dev'
 
 
 BROWSER_UPLOAD_CORS = CorsRule(

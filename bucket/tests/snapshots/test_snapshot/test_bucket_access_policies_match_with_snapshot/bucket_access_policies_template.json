@@ -10,7 +10,7 @@
         "DownloadIgvfFilesPolicy7962BB8F": {
             "Properties": {
                 "Description": "",
-                "ManagedPolicyName": "download-igvf-files",
+                "ManagedPolicyName": "download-pankbase-files",
                 "Path": "/",
                 "PolicyDocument": {
                     "Statement": [
@@ -52,10 +52,10 @@
                                         ]
                                     ]
                                 },
-                                "arn:aws:s3:::igvf-blobs",
-                                "arn:aws:s3:::igvf-blobs/*",
-                                "arn:aws:s3:::igvf-files",
-                                "arn:aws:s3:::igvf-files/*"
+                                "arn:aws:s3:::pankbase-blobs",
+                                "arn:aws:s3:::pankbase-blobs/*",
+                                "arn:aws:s3:::pankbase-files",
+                                "arn:aws:s3:::pankbase-files/*"
                             ],
                             "Sid": "AllowReadFromFilesAndBlobsBuckets"
                         }
@@ -68,7 +68,7 @@
         "UploadIgvfFilesPolicyE468DEF2": {
             "Properties": {
                 "Description": "",
-                "ManagedPolicyName": "upload-igvf-files",
+                "ManagedPolicyName": "upload-pankbase-files",
                 "Path": "/",
                 "PolicyDocument": {
                     "Statement": [
@@ -136,7 +136,7 @@
                         "Ref": "UploadIgvfFilesPolicyE468DEF2"
                     }
                 ],
-                "UserName": "upload-igvf-files"
+                "UserName": "upload-pankbase-files"
             },
             "Type": "AWS::IAM::User"
         },
@@ -151,7 +151,7 @@
         "UploadIgvfFilesUserAccessKeySecret49A5A8C8": {
             "DeletionPolicy": "Delete",
             "Properties": {
-                "Name": "upload-igvf-files-user-access-key-secret",
+                "Name": "upload-pankbase-files-user-access-key-secret",
                 "SecretString": {
                     "Fn::Join": [
                         "",
