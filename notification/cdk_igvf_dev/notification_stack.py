@@ -19,8 +19,8 @@ class NotificationStack(cdk.Stack):
             self,
             'aws-chatbot',
             slack_channel_configuration_name='pankbase-aws-chatbot',
-            slack_workspace_id='T1KMV4JJZ',
-            slack_channel_id='C03TCFF0MTM',
+            slack_workspace_id='T074YEUTZAR',
+            slack_channel_id='C07DZ5YHASC',
         )
         self.alarm_notification_topic = Topic(
             self,
