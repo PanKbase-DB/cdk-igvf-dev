@@ -65,8 +65,8 @@ class BucketAccessPolicies(Stack):
             actions=[
                 's3:PutObject',
                 's3:GetObjectVersion',
-                's3:GetObject',
                 's3:GetBucketAcl',
+                's3:GetObject',
                 's3:ListBucket',
                 's3:GetBucketLocation',
             ]
