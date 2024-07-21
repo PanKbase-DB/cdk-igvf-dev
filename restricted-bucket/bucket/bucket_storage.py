@@ -107,6 +107,6 @@ class RestrictedBucketStorage(Stack):
                 CORS
             ],
             removal_policy=RemovalPolicy.RETAIN,
-            server_access_logs_bucket=self.restricted_files_logs_bucket,
+            #server_access_logs_bucket=self.restricted_files_logs_bucket,
             versioned=True,
         )
